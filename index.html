@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>היידי — מערכת מעקב המלטה וגדילת גורים</title>
+  <!-- אייקון והגדרות אפליקציה לאייפון (Add to Home Screen) עם התמונה של היידי -->
+  <link rel="icon" type="image/jpeg" href="heidi_icon.jpg" />
+  <link rel="apple-touch-icon" href="heidi_icon.jpg" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="היידי וגוריה" />
+  <meta name="theme-color" content="#059669" />
+  <!-- גופנים עבריים מעוצבים: Fredoka & Rubik לכותרות, Assistant לגוף הטקסט -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Fredoka:wght@500;600;700&family=Rubik:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- פס עליון דביק: שם המערכת, תמונת היידי, חיווי שמירה בזמן אמת ומצב לילה -->
+  <header class="top-sticky-bar">
+    <div class="top-bar-inner">
+      <div class="brand-area">
+        <div class="brand-avatar brand-avatar-photo" title="לחצי להגדלת התמונה של היידי" onclick="HeidiApp.openPhotoLightbox('heidi.jpg')">
+          <img src="heidi_icon.jpg" alt="היידי הלברדורית" class="brand-avatar-img" />
+        </div>
+        <div>
+          <div class="brand-title">היידי — מעקב המלטה וגדילת גורים</div>
+          <div class="brand-subtitle">מערכת תיעוד אישית לתכלת · שמירה אוטומטית במכשיר</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <span id="saveStatusPill" class="save-pill">✓ כל הנתונים שמורים במכשיר</span>
+        <button id="darkModeToggleBtn" class="btn btn-sm btn-secondary" onclick="HeidiApp.toggleDarkMode()">
+          🌙 מצב לילה
+        </button>
+      </div>
+    </div>
+
+    <!-- פס חירום וטרינר קבוע בראש העמוד -->
+    <div id="vetEmergencyStrip" class="vet-emergency-strip"></div>
+  </header>
+
+  <!-- תוכן ראשי דינמי -->
+  <main id="mainViewContainer" class="app-container"></main>
+
+  <!-- מודאל רב-תכליתי להזנה מהירה ביד אחת -->
+  <div id="appModalBackdrop" class="modal-backdrop">
+    <div id="appModalContent" class="modal-content"></div>
+  </div>
+
+  <!-- סרגל ניווט תחתון (8 המודולים לפי מסמך האפיון) -->
+  <nav class="bottom-nav" aria-label="ניווט ראשי">
+    <div class="bottom-nav-inner">
+      <button class="nav-tab active" data-tab="dashboard" onclick="HeidiApp.switchTab('dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span>לוח בקרה</span>
+      </button>
+      <button class="nav-tab" data-tab="whelping" onclick="HeidiApp.switchTab('whelping')">
+        <span class="nav-icon">⏱️</span>
+        <span>ההמלטה</span>
+      </button>
+      <button class="nav-tab" data-tab="puppies" onclick="HeidiApp.switchTab('puppies')">
+        <span class="nav-icon">🐶</span>
+        <span>הגורים</span>
+      </button>
+      <button class="nav-tab" data-tab="weights" onclick="HeidiApp.switchTab('weights')">
+        <span class="nav-icon">⚖️</span>
+        <span>מעקב משקלים</span>
+      </button>
+      <button class="nav-tab" data-tab="dam" onclick="HeidiApp.switchTab('dam')">
+        <span class="nav-icon">🦮</span>
+        <span>היידי — האם</span>
+      </button>
+      <button class="nav-tab" data-tab="tasks" onclick="HeidiApp.switchTab('tasks')">
+        <span class="nav-icon">📋</span>
+        <span>יומן ומשימות</span>
+      </button>
+      <button class="nav-tab" data-tab="knowledge" onclick="HeidiApp.switchTab('knowledge')">
+        <span class="nav-icon">📚</span>
+        <span>ידע והנחיות</span>
+      </button>
+      <button class="nav-tab" data-tab="settings" onclick="HeidiApp.switchTab('settings')">
+        <span class="nav-icon">⚙️</span>
+        <span>הגדרות וחירום</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="data.js"></script>
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
