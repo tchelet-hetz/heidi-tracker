@@ -145,15 +145,17 @@ const HeidiApp = {
     if (actualBirth) {
       const birthMs = new Date(actualBirth).getTime();
       const nowMs = Date.now();
-      const diffDays = Math.max(0, Math.floor((nowMs - birthMs) / (1000 * 60 * 60 * 24)));
-      return {
-        title: `יום ${diffDays} מאז ההמלטה`,
-        subtitle: `תאריך המלטה מתועד: ${actualBirth.split('-').reverse().join('.')}`
-      };
+      if (birthMs <= nowMs) {
+        const diffDays = Math.max(0, Math.floor((nowMs - birthMs) / (1000 * 60 * 60 * 24)));
+        return {
+          title: `יום ${diffDays} מאז ההמלטה`,
+          subtitle: `תאריך המלטה מתועד: ${actualBirth.split('-').reverse().join('.')}`
+        };
+      }
     }
     return {
       title: 'לפני המלטה (היריון פעיל)',
-      subtitle: 'חלון משוער: רביעי עד שבת השבוע (11.11.2026 עד 14.11.2026 · ⚠️ טרם אומת וטרינרית)'
+      subtitle: 'חלון משוער: רביעי עד שבת השבוע (11.11.2026 עד 14.11.2026)'
     };
   },
 
@@ -183,12 +185,12 @@ const HeidiApp = {
             <span class="heidi-hero-badge">Dog of Honor 🐾</span>
           </div>
           <div>
-            <h2 class="card-title" style="font-size: 1.38rem; margin-bottom: 4px;">🐾 שלום תכלת — לוח הבקרה של היידי והגורים</h2>
+            <h2 class="card-title" style="font-size: 1.38rem; margin-bottom: 4px;">🐾 שלום למשפחה של היידי — לוח הבקרה של היידי והגורים</h2>
             <p style="font-size: 0.92rem; color: var(--text-secondary); font-weight: 600;">
-              היידי (לברדור רטריבר · בת כ-3 שנים · לידה ראשונה) · כל שינוי נשמר אוטומטית במכשיר
+              מערכת תיעוד למשפחה של היידי · לברדור רטריבר (בת כ-3 שנים · לידה ראשונה) · שמירה אוטומטית במכשיר
             </p>
             <p style="font-size: 0.82rem; color: var(--primary-dark); font-weight: 700; margin-top: 3px;">
-              💡 לחצי על התמונה של היידי להגדלה למסך מלא
+              💡 לחצו על התמונה של היידי להגדלה למסך מלא
             </p>
           </div>
         </div>
