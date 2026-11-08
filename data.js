@@ -121,19 +121,19 @@ function createInitialState() {
       ultrasoundDate: '2026-10-11',
       ultrasoundResult: 'אושר היריון (כ-27 ימים מהזרעה שנייה); נצפו כ-6 שקי היריון/מבנים עובריים, ייתכן יותר עקב חפיפה. מספר סופי לא ידוע.',
       estimatedWhelpingWindow: 'בין רביעי לשבת השבוע (11.11.2026 עד 14.11.2026) — ⚠️ הערכה לא מאומתת וטרינרית',
-      vetConfirmedDueDate: '',
+      vetConfirmedDueDate: '2026-11-14',
       xrayPerformed: 'לא ידוע / טרם הוזן',
-      xrayDateAndResult: '',
+      xrayDateAndResult: '11/10/26 ראו כ-6 גורים',
       updatedAt: nowIso
     },
     vetContact: {
-      vetName: '',
-      vetPhone: '',
-      emergencyClinicName: '',
-      emergencyClinicPhone: '',
-      whelpingHelperName: '',
-      whelpingHelperPhone: '',
-      whelpingAddress: '',
+      vetName: 'ד"ר מור פימה',
+      vetPhone: '0547674785',
+      emergencyClinicName: 'פמילי ווט',
+      emergencyClinicPhone: '0772053303',
+      whelpingHelperName: 'אלה',
+      whelpingHelperPhone: '0507936043',
+      whelpingAddress: 'אסתר רבין 39, חיפה',
       agreedEmergencyThresholds: '',
       updatedAt: nowIso
     },
@@ -188,6 +188,23 @@ class HeidiDataStore {
           vetContact: { ...initial.vetContact, ...(parsed.vetContact || {}) },
           litter: { ...initial.litter, ...(parsed.litter || {}) }
         };
+
+        // השלמת פרטי הווטרינר וההיריון שהוזנו על ידי המשפחה אם השדות במכשיר היו ריקים
+        Object.keys(initial.vetContact).forEach(k => {
+          if (!this.state.vetContact[k] && initial.vetContact[k]) {
+            this.state.vetContact[k] = initial.vetContact[k];
+          }
+        });
+        if (this.state.vetContact.whelpingHelperName === 'אלה 0507936043' && !this.state.vetContact.whelpingHelperPhone) {
+          this.state.vetContact.whelpingHelperName = 'אלה';
+          this.state.vetContact.whelpingHelperPhone = '0507936043';
+        }
+        Object.keys(initial.pregnancy).forEach(k => {
+          if (!this.state.pregnancy[k] && initial.pregnancy[k]) {
+            this.state.pregnancy[k] = initial.pregnancy[k];
+          }
+        });
+        this.save();
 
         // אם רשימת המשימות הייתה הרשימה הקצרה משלב א' (5 פריטים), נשדרג לרשימת 20 פריטי הציוד המלאה
         if (!this.state.tasks || this.state.tasks.length < 10) {
@@ -1012,3 +1029,5 @@ window.RIBBON_PRESETS = RIBBON_PRESETS;
 window.STATUS_LABELS = STATUS_LABELS;
 window.SEX_LABELS = SEX_LABELS;
 window.LABOR_EVENT_TYPES = LABOR_EVENT_TYPES;
+
+
