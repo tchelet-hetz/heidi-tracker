@@ -4,6 +4,8 @@
    ========================================================================== */
 
 const STORAGE_KEY = 'heidi_whelping_tracker_v1';
+const CLOUD_SYNC_TOPIC = 'heidi_family_sync_tchelet_2026_9f8a7b6c5d_v2';
+
 
 // צבעי סרט זיהוי מובנים לבחירה מהירה (ניתן גם להקליד כל צבע חופשי)
 const RIBBON_PRESETS = [
@@ -169,8 +171,14 @@ function createInitialState() {
 class HeidiDataStore {
   constructor() {
     this.state = null;
+    this.deviceId = 'dev_' + Math.random().toString(36).slice(2, 9);
+    this.pushTimer = null;
+    this.isPushing = false;
+    this.lastProcessedMsgId = null;
+    this.eventSource = null;
     this.lastSaveStatus = { ok: true, timeStr: '', message: 'מוכן' };
     this.load();
+    this.initCloudSync();
   }
 
   load() {
@@ -221,28 +229,49 @@ class HeidiDataStore {
         if (!this.state.journalNotes) {
           this.state.journalNotes = [];
         }
+        if (!Array.isArray(this.state.meta.deletedIds)) {
+          this.state.meta.deletedIds = [];
+        }
+        this.save(true);
       } else {
         this.state = createInitialState();
-        this.save();
+        this.state.meta.deletedIds = [];
+        this.save(true);
       }
       this.updateSaveIndicator(true);
     } catch (err) {
       console.error('שגיאה בטעינת נתונים מ-LocalStorage:', err);
       this.state = createInitialState();
+      this.state.meta.deletedIds = [];
       this.updateSaveIndicator(false, 'שגיאה בטעינת נתונים מקומיים');
     }
   }
 
-  save() {
+  recordDeletedId(id) {
+    if (!id) return;
+    if (!Array.isArray(this.state.meta.deletedIds)) {
+      this.state.meta.deletedIds = [];
+    }
+    if (!this.state.meta.deletedIds.includes(id)) {
+      this.state.meta.deletedIds.push(id);
+    }
+  }
+
+  save(skipCloudPush = false) {
     try {
-      this.state.meta.updatedAt = new Date().toISOString();
+      if (!skipCloudPush) {
+        this.state.meta.updatedAt = new Date().toISOString();
+      }
       const serialized = JSON.stringify(this.state);
       localStorage.setItem(STORAGE_KEY, serialized);
       const verify = localStorage.getItem(STORAGE_KEY);
       if (verify !== serialized) {
         throw new Error('אימות כתיבה לזיכרון המקומי נכשל');
       }
-      this.updateSaveIndicator(true);
+      this.updateSaveIndicator(true, '', skipCloudPush ? '☁️ מסונכרן למשפחה' : '☁️ מסנכרן למשפחה...');
+      if (!skipCloudPush) {
+        this.scheduleCloudPush();
+      }
       return true;
     } catch (err) {
       console.error('שגיאה בשמירת נתונים:', err);
@@ -251,19 +280,270 @@ class HeidiDataStore {
     }
   }
 
-  updateSaveIndicator(ok, errorMsg = '') {
+  updateSaveIndicator(ok, errorMsg = '', cloudLabel = '☁️ מסונכרן למשפחה') {
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
     this.lastSaveStatus = {
       ok,
       timeStr: `${hh}:${mm}`,
-      message: ok ? `✓ נשמר במכשיר (${hh}:${mm})` : `⚠ השמירה נכשלה: ${errorMsg}`
+      message: ok ? `${cloudLabel} (${hh}:${mm})` : `⚠ השמירה נכשלה: ${errorMsg}`
     };
     const pill = document.getElementById('saveStatusPill');
     if (pill) {
       pill.textContent = this.lastSaveStatus.message;
       pill.className = ok ? 'save-pill' : 'save-pill error';
+    }
+  }
+
+  // ========================================================================
+  // סנכרון ענן חי בזמן אמת לכל המשפחה (תכלת, בעלה וההורים באייפון ובמחשב)
+  // ========================================================================
+  initCloudSync() {
+    if (typeof window === 'undefined') return;
+    setTimeout(() => {
+      this.pullFromCloud(true);
+      this.connectLiveStream();
+    }, 300);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this.pullFromCloud(false);
+      }
+    });
+    window.addEventListener('focus', () => {
+      this.pullFromCloud(false);
+    });
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && !this.isPushing) {
+        this.pullFromCloud(false);
+      }
+    }, 20000);
+  }
+
+  scheduleCloudPush() {
+    if (this.pushTimer) clearTimeout(this.pushTimer);
+    this.pushTimer = setTimeout(() => {
+      this.pushToCloud();
+    }, 650);
+  }
+
+  async pushToCloud() {
+    if (this.isPushing) return;
+    this.isPushing = true;
+    try {
+      const envelope = {
+        _syncType: 'heidi_family_state_v2',
+        _senderDevice: this.deviceId,
+        _sentAt: new Date().toISOString(),
+        state: this.state
+      };
+      const resp = await fetch(`https://ntfy.sh/${CLOUD_SYNC_TOPIC}`, {
+        method: 'POST',
+        body: JSON.stringify(envelope)
+      });
+      if (resp.ok) {
+        const resJson = await resp.json().catch(() => ({}));
+        if (resJson && resJson.id) {
+          this.lastProcessedMsgId = resJson.id;
+        }
+        this.updateSaveIndicator(true, '', '☁️ מסונכרן לכל המשפחה');
+      }
+    } catch (e) {
+      console.warn('Cloud push warning (saved locally):', e);
+      this.updateSaveIndicator(true, '', '✓ שמור במכשיר (ממתין לרשת)');
+    } finally {
+      this.isPushing = false;
+    }
+  }
+
+  async pullFromCloud(isInitial = false) {
+    try {
+      const resp = await fetch(`https://ntfy.sh/${CLOUD_SYNC_TOPIC}/json?poll=1&since=all`);
+      if (!resp.ok) return;
+      const text = await resp.text();
+      const lines = text.trim().split('\n').filter(Boolean);
+      if (lines.length === 0) {
+        if (isInitial) {
+          this.pushToCloud();
+        }
+        return;
+      }
+      // ניקח את ההודעה העדכנית ביותר מסוג message
+      const msgLines = [];
+      for (const line of lines) {
+        try {
+          const parsedLine = JSON.parse(line);
+          if (parsedLine && parsedLine.event === 'message') {
+            msgLines.push(parsedLine);
+          }
+        } catch (e) {}
+      }
+      if (msgLines.length === 0) {
+        if (isInitial) this.pushToCloud();
+        return;
+      }
+      // עיבוד 3 ההודעות האחרונות לפי סדר כדי להבטיח מיזוג מלא אם שניים שלחו יחד
+      const recentMsgs = msgLines.slice(-3);
+      let anyChanged = false;
+      for (const msg of recentMsgs) {
+        const changed = await this.processCloudMessage(msg, true);
+        if (changed) anyChanged = true;
+      }
+      if (anyChanged && window.HeidiApp) {
+        this.refreshAppViewSafely();
+      }
+    } catch (e) {
+      console.warn('Cloud pull warning:', e);
+    }
+  }
+
+  connectLiveStream() {
+    if (typeof EventSource === 'undefined') return;
+    try {
+      if (this.eventSource) {
+        this.eventSource.close();
+      }
+      this.eventSource = new EventSource(`https://ntfy.sh/${CLOUD_SYNC_TOPIC}/sse`);
+      this.eventSource.onmessage = async (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg && msg.event === 'message') {
+            const changed = await this.processCloudMessage(msg, false);
+            if (changed && window.HeidiApp) {
+              this.refreshAppViewSafely();
+            }
+          }
+        } catch (e) {}
+      };
+    } catch (e) {
+      console.warn('SSE stream warning:', e);
+    }
+  }
+
+  async processCloudMessage(msg, allowSameDeviceOnInit = false) {
+    if (!msg || !msg.id) return false;
+    if (msg.id === this.lastProcessedMsgId) return false;
+
+    let payloadText = msg.message || '';
+    if (msg.attachment && msg.attachment.url) {
+      try {
+        const attResp = await fetch(msg.attachment.url);
+        if (attResp.ok) {
+          payloadText = await attResp.text();
+        }
+      } catch (e) {
+        return false;
+      }
+    }
+    if (!payloadText || !payloadText.startsWith('{')) return false;
+
+    try {
+      const parsed = JSON.parse(payloadText);
+      const remoteState = parsed._syncType === 'heidi_family_state_v2' ? parsed.state : (parsed.dam ? parsed : null);
+      if (!remoteState) return false;
+      if (!allowSameDeviceOnInit && parsed._senderDevice && parsed._senderDevice === this.deviceId) {
+        this.lastProcessedMsgId = msg.id;
+        return false;
+      }
+      this.lastProcessedMsgId = msg.id;
+      return this.mergeRemoteState(remoteState);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  mergeRemoteState(remote) {
+    if (!remote || typeof remote !== 'object') return false;
+    const beforeJson = JSON.stringify(this.state);
+
+    // 1. איחוד רשימת מזהים שנמחקו
+    const localDel = Array.isArray(this.state.meta?.deletedIds) ? this.state.meta.deletedIds : [];
+    const remoteDel = Array.isArray(remote.meta?.deletedIds) ? remote.meta.deletedIds : [];
+    const deletedSet = new Set([...localDel, ...remoteDel]);
+    this.state.meta.deletedIds = Array.from(deletedSet);
+
+    // 2. פונקציית עזר למיזוג מערכים לפי id ו-updatedAt
+    const mergeArrayById = (localArr = [], remoteArr = []) => {
+      const map = new Map();
+      localArr.forEach(item => {
+        if (item && item.id && !deletedSet.has(item.id)) {
+          map.set(item.id, item);
+        }
+      });
+      remoteArr.forEach(rItem => {
+        if (!rItem || !rItem.id || deletedSet.has(rItem.id)) return;
+        const lItem = map.get(rItem.id);
+        if (!lItem) {
+          map.set(rItem.id, rItem);
+        } else {
+          const lTime = new Date(lItem.updatedAt || lItem.createdAt || 0).getTime() || 0;
+          const rTime = new Date(rItem.updatedAt || rItem.createdAt || 0).getTime() || 0;
+          if (rTime >= lTime) {
+            map.set(rItem.id, rItem);
+          }
+        }
+      });
+      return Array.from(map.values());
+    };
+
+    this.state.puppies = mergeArrayById(this.state.puppies, remote.puppies).sort((a, b) => (a.birthOrder || 0) - (b.birthOrder || 0));
+    // הסרת רשומות משויכות לגור שנמחק
+    this.state.weightEntries = mergeArrayById(this.state.weightEntries, remote.weightEntries).filter(w => !deletedSet.has(w.puppyId));
+    this.state.feedingEntries = mergeArrayById(this.state.feedingEntries, remote.feedingEntries).filter(f => !deletedSet.has(f.puppyId));
+    this.state.healthObservations = mergeArrayById(this.state.healthObservations, remote.healthObservations).filter(h => !deletedSet.has(h.puppyId));
+    this.state.laborEvents = mergeArrayById(this.state.laborEvents, remote.laborEvents);
+    this.state.damDailyLogs = mergeArrayById(this.state.damDailyLogs, remote.damDailyLogs);
+    this.state.environmentLogs = mergeArrayById(this.state.environmentLogs, remote.environmentLogs);
+    this.state.journalNotes = mergeArrayById(this.state.journalNotes, remote.journalNotes);
+    this.state.tasks = mergeArrayById(this.state.tasks, remote.tasks);
+    this.state.milestones = mergeArrayById(this.state.milestones, remote.milestones);
+
+    // 3. מיזוג אובייקטים יחידים (dam, pregnancy, vetContact, litter) לפי updatedAt והשלמת שדות
+    const mergeSingleObj = (localObj = {}, remoteObj = {}) => {
+      const lTime = new Date(localObj.updatedAt || 0).getTime() || 0;
+      const rTime = new Date(remoteObj.updatedAt || 0).getTime() || 0;
+      const newer = rTime >= lTime ? remoteObj : localObj;
+      const older = rTime >= lTime ? localObj : remoteObj;
+      const merged = { ...older, ...newer };
+      Object.keys(older).forEach(k => {
+        if ((merged[k] === '' || merged[k] === null || merged[k] === undefined) && older[k]) {
+          merged[k] = older[k];
+        }
+      });
+      return merged;
+    };
+
+    if (remote.dam) this.state.dam = mergeSingleObj(this.state.dam, remote.dam);
+    if (remote.pregnancy) this.state.pregnancy = mergeSingleObj(this.state.pregnancy, remote.pregnancy);
+    if (remote.vetContact) this.state.vetContact = mergeSingleObj(this.state.vetContact, remote.vetContact);
+    if (remote.litter) {
+      const maxSeq = Math.max(
+        Number(this.state.litter?.nextPuppySeq || 1),
+        Number(remote.litter?.nextPuppySeq || 1),
+        this.state.puppies.length + 1
+      );
+      this.state.litter = mergeSingleObj(this.state.litter, remote.litter);
+      this.state.litter.nextPuppySeq = maxSeq;
+    }
+
+    const afterJson = JSON.stringify(this.state);
+    if (afterJson !== beforeJson) {
+      this.save(true);
+      this.updateSaveIndicator(true, '', '☁️ התעדכן מהמשפחה');
+      return true;
+    }
+    this.updateSaveIndicator(true, '', '☁️ מסונכרן לכל המשפחה');
+    return false;
+  }
+
+  refreshAppViewSafely() {
+    if (!window.HeidiApp) return;
+    window.HeidiApp.renderEmergencyStrip();
+    const modalBackdrop = document.getElementById('appModalBackdrop');
+    // אם אין כרגע חלון טופס פתוח באמצע הקלדה — נרענן את המסך מיד
+    if (!modalBackdrop || !modalBackdrop.classList.contains('open')) {
+      window.HeidiApp.switchTab(window.HeidiApp.activeTab || 'dashboard');
     }
   }
 
@@ -400,6 +680,10 @@ class HeidiDataStore {
   }
 
   deletePuppy(puppyId) {
+    this.recordDeletedId(puppyId);
+    this.state.weightEntries.filter(w => w.puppyId === puppyId).forEach(w => this.recordDeletedId(w.id));
+    this.state.feedingEntries.filter(f => f.puppyId === puppyId).forEach(f => this.recordDeletedId(f.id));
+    this.state.healthObservations.filter(h => h.puppyId === puppyId).forEach(h => this.recordDeletedId(h.id));
     this.state.puppies = this.state.puppies.filter(p => p.id !== puppyId);
     this.state.weightEntries = this.state.weightEntries.filter(w => w.puppyId !== puppyId);
     this.state.feedingEntries = this.state.feedingEntries.filter(f => f.puppyId !== puppyId);
@@ -471,6 +755,7 @@ class HeidiDataStore {
   }
 
   deleteLaborEvent(eventId) {
+    this.recordDeletedId(eventId);
     this.state.laborEvents = this.state.laborEvents.filter(e => e.id !== eventId);
     this.save();
   }
@@ -575,6 +860,7 @@ class HeidiDataStore {
   }
 
   deleteDamDailyLog(logId) {
+    this.recordDeletedId(logId);
     this.state.damDailyLogs = this.state.damDailyLogs.filter(x => x.id !== logId);
     this.save();
   }
@@ -602,6 +888,7 @@ class HeidiDataStore {
   }
 
   deleteFeedingEntry(entryId) {
+    this.recordDeletedId(entryId);
     this.state.feedingEntries = this.state.feedingEntries.filter(x => x.id !== entryId);
     this.save();
   }
@@ -634,6 +921,7 @@ class HeidiDataStore {
   }
 
   deleteHealthObservation(obsId) {
+    this.recordDeletedId(obsId);
     this.state.healthObservations = this.state.healthObservations.filter(x => x.id !== obsId);
     this.save();
   }
@@ -668,6 +956,7 @@ class HeidiDataStore {
   }
 
   deleteEnvironmentLog(envId) {
+    this.recordDeletedId(envId);
     this.state.environmentLogs = this.state.environmentLogs.filter(x => x.id !== envId);
     this.save();
   }
@@ -701,6 +990,7 @@ class HeidiDataStore {
   }
 
   deleteTaskItem(taskId) {
+    this.recordDeletedId(taskId);
     this.state.tasks = this.state.tasks.filter(t => t.id !== taskId);
     this.save();
   }
@@ -734,6 +1024,7 @@ class HeidiDataStore {
   }
 
   deleteFreeJournalNote(noteId) {
+    this.recordDeletedId(noteId);
     this.state.journalNotes = this.state.journalNotes.filter(n => n.id !== noteId);
     this.save();
   }
@@ -800,6 +1091,7 @@ class HeidiDataStore {
   }
 
   deleteWeightEntry(entryId) {
+    this.recordDeletedId(entryId);
     this.state.weightEntries = this.state.weightEntries.filter(w => w.id !== entryId);
     this.save();
   }
