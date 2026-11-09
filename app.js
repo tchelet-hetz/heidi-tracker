@@ -198,6 +198,9 @@ const HeidiApp = {
           <button class="btn btn-primary" onclick="HeidiApp.switchTab('whelping')">
             ⏱️ מסך ההמלטה (זמן אמת)
           </button>
+          <button class="btn btn-secondary" style="border-color: var(--primary); color: var(--primary-dark);" onclick="HeidiApp.openDamLogModal()">
+            🌡️ מדידת חום / בדיקת היידי
+          </button>
           <button class="btn btn-secondary" onclick="HeidiApp.openWeightModal()">
             ⚖️ שקילה חדשה
           </button>
@@ -1973,7 +1976,7 @@ const HeidiApp = {
   },
 
   // ========================================================================
-  // 6. שלב ג': לשונית "🦮 היידי — האם" (סעיף 7 במסמך האפיון)
+  // 6. שלב ג': לשונית "🦮 היידי — האם" (לפני המלטה: חום בוקר/ערב + אחרי המלטה)
   // ========================================================================
   renderDamView(container) {
     const store = window.HeidiStore;
@@ -1985,29 +1988,37 @@ const HeidiApp = {
     container.innerHTML = `
       <div class="heidi-hero-card">
         <div class="heidi-hero-left">
-          <div class="heidi-hero-photo-wrap" onclick="HeidiApp.openPhotoLightbox('heidi.jpg')" title="לחצי להגדלת התמונה המלאה של היידי">
+          <div class="heidi-hero-photo-wrap" onclick="HeidiApp.openPhotoLightbox('heidi.jpg')" title="לחצו להגדלת התמונה המלאה של היידי">
             <img src="heidi_icon.jpg" alt="היידי הלברדורית" class="heidi-hero-photo" />
             <span class="heidi-hero-badge">היידי שלנו ❤️</span>
           </div>
           <div>
-            <h2 class="card-title">🦮 היידי — מעקב בריאות והתאוששות האם לאחר ההמלטה</h2>
+            <h2 class="card-title">🦮 היידי — מעקב חום לפני המלטה (בוקר/ערב) והתאוששות אחריה</h2>
             <p style="font-size:0.88rem; color:var(--text-muted);">
-              ${dam.name} (${dam.breed} · ${dam.ageText} · ${dam.parityText}) · מעקב יומי אחר תיאבון, שתייה, חום, הפרשות (Lochia), עטינים והתנהגות אימהית
+              ${dam.name} (${dam.breed} · בת כ-3 שנים · המלטה ראשונה) · מעקב מדידות חום בוקר/ערב וסימנים מקדימים לפני ההמלטה, ומעקב התאוששות והנקה אחריה
             </p>
           </div>
         </div>
         <button class="btn btn-primary" onclick="HeidiApp.openDamLogModal()">
-          ➕ רישום בדיקה יומית להיידי
+          🌡️ רישום בדיקה / חום להיידי
         </button>
       </div>
       <div class="card">
+        <div class="alert-box alert-info" style="margin-bottom:10px; font-size:0.86rem;">
+          <div>
+            <strong>🌡️ מעקב לפני ההמלטה (מדידת חום בוקר וערב):</strong>
+            <ul style="margin-top:4px; padding-right:18px;">
+              <li>ירידה של חום הגוף הרקטלי של היידי <strong>מתחת ל-<code>37.8°C</code> (<code>100°F</code>)</strong> מרמזת לרוב על תחילת ההמלטה בתוך <strong>12 עד 24 שעות</strong> (מקור: Cornell / Merck).</li>
+              <li>סימנים מקדימים נוספים: קינון וחפירה, חוסר שקט, התנשפות, רעידות, ירידה בתיאבון לקראת הלידה והתמלאות עטינים.</li>
+            </ul>
+          </div>
+        </div>
         <div class="alert-box alert-warning" style="margin-bottom:0; font-size:0.86rem;">
           <div>
             <strong>📌 הנחיות וסימני אזהרה לאחר ההמלטה (סעיף 7 באפיון):</strong>
             <ul style="margin-top:4px; padding-right:18px;">
               <li>לאחר ההמלטה צפויה הפרשה רחמית (לוכיה — <code>lochia</code>) שיכולה להיות כהה/אדומה-חומה, ובדרך כלל <strong>ללא ריח רע</strong>.</li>
-              <li><strong>מחייב התייעצות וטרינרית מיידית:</strong> ריח רע מההפרשות, עלייה בכמות ההפרשה או דימום טרי, חום, אפתיה, חוסר תיאבון משמעותי, כאב, עטין אדום/חם/כואב/קשה או התנהגות אימהית חריגה.</li>
-              <li>אין לתת תרופות או תוספים ללא הוראת וטרינר/ית.</li>
+              <li><strong>מחייב התייעצות וטרינרית מיידית:</strong> ריח רע מההפרשות, עלייה בכמות ההפרשה או דימום טרי, חום גבוה, אפתיה, חוסר תיאבון משמעותי, כאב, עטין אדום/חם/כואב/קשה או התנהגות חריגה.</li>
             </ul>
           </div>
         </div>
@@ -2020,210 +2031,307 @@ const HeidiApp = {
           <span class="stat-sub">${dam.breed} · ${dam.color}</span>
         </div>
         <div class="stat-box">
+          <span class="stat-label">חום אחרון שנמדד להיידי</span>
+          <span class="stat-value" style="font-size:1.25rem; color:${logs[0]?.temperatureC && Number(logs[0].temperatureC) < 37.8 ? 'var(--amber-text)' : 'var(--primary-dark)'};">
+            ${logs.find(x => x.temperatureC)?.temperatureC ? `${logs.find(x => x.temperatureC).temperatureC}°C` : 'טרם הוזן'}
+          </span>
+          <span class="stat-sub">${logs.find(x => x.temperatureC) ? `נמדד ב-${this.formatDateTimeIL(logs.find(x => x.temperatureC).eventAt)}` : 'סף התראה לקראת המלטה: מתחת ל-37.8°C'}</span>
+        </div>
+        <div class="stat-box">
           <span class="stat-label">משקל היידי</span>
           <span class="stat-value" style="font-size:1.2rem;">${dam.currentWeightKg ? `${dam.currentWeightKg} ק"ג` : 'טרם הוזן עדכני'}</span>
           <span class="stat-sub">עבר: ${dam.reportedPastWeightKg}</span>
         </div>
         <div class="stat-box">
-          <span class="stat-label">תרופות / תוספים במרשם</span>
-          <span class="stat-value" style="font-size:1.05rem;">${dam.prescribedMeds || 'לא הוזנו תרופות במרשם'}</span>
-          <span class="stat-sub">להזנה ידנית לפי מרשם וטרינר בלבד</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-label">רשומות מעקב אם</span>
+          <span class="stat-label">רשומות מעקב היידי</span>
           <span class="stat-value" style="font-size:1.3rem;">${this.formatNum(logs.length)}</span>
-          <span class="stat-sub">${logs.length > 0 ? `אחרון: ${this.formatDateTimeIL(logs[0].eventAt)}` : 'טרם נרשמו בדיקות יומיות'}</span>
+          <span class="stat-sub">${logs.length > 0 ? `אחרון: ${this.formatDateTimeIL(logs[0].eventAt)}` : 'טרם נרשמו בדיקות'}</span>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">📋 יומן מעקב יומי אחר היידי (${this.formatNum(logs.length)})</h3>
-          <button class="btn btn-sm btn-primary" onclick="HeidiApp.openDamLogModal()">➕ רישום בדיקה להיידי</button>
+          <h3 class="card-title">📋 יומן בדיקות ומדידות חום להיידי (${this.formatNum(logs.length)})</h3>
+          <button class="btn btn-sm btn-primary" onclick="HeidiApp.openDamLogModal()">➕ רישום בדיקה / חום להיידי</button>
         </div>
 
         ${logs.length === 0 ? `
           <div style="padding:28px; text-align:center; color:var(--text-muted); background:var(--surface-muted); border-radius:var(--radius-sm);">
-            טרם תועדו כרטיסי מעקב יומיים להיידי. לחצי על <strong>"➕ הוספת כרטיס מעקב יומי להיידי"</strong> כדי לתעד תיאבון, שתייה, עטינים והפרשות.
+            טרם תועדו בדיקות להיידי. לחצו על <strong>"➕ רישום בדיקה / חום להיידי"</strong> כדי לתעד מדידת חום בוקר/ערב לפני ההמלטה או מעקב אחריה.
           </div>
         ` : `
           <div class="timeline-list">
-            ${logs.map((l, idx) => `
-              <div class="timeline-item" style="border-right-color: ${l.hasRedFlag ? 'var(--danger)' : 'var(--primary)'};">
-                <div style="flex:1;">
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
-                    <span class="puppy-id-badge">#${logs.length - idx}</span>
-                    <strong style="font-size:1.04rem;">${this.formatDateTimeIL(l.eventAt)}</strong>
-                    ${l.temperatureC ? `<span class="status-badge status-watch">🌡️ חום: ${l.temperatureC}°C</span>` : ''}
-                    ${l.weightKg ? `<span class="status-badge status-with_dam">⚖️ משקל: ${l.weightKg} ק"ג</span>` : ''}
-                    ${l.hasRedFlag ? `<span class="status-badge status-vet_care">🚨 דורש התייעצות עם הווטרינר/ית!</span>` : `<span class="status-badge status-with_dam">✓ תקין</span>`}
+            ${logs.map((l, idx) => {
+              const isPre = (l.stage === 'pre_whelping') || (!l.stage && store.state.puppies.length === 0);
+              const tempNum = l.temperatureC && !isNaN(Number(l.temperatureC)) ? Number(l.temperatureC) : null;
+              const isDrop = Boolean(isPre && tempNum !== null && tempNum > 34 && tempNum < 37.8);
+              const shiftHour = new Date(l.eventAt).getHours();
+              const shiftLabel = l.checkShift || (shiftHour >= 5 && shiftHour < 12 ? '☀️ בוקר' : (shiftHour >= 12 && shiftHour < 17 ? '🌤️ צהריים' : '🌙 ערב'));
+
+              return `
+                <div class="timeline-item" style="border-right-color: ${l.hasRedFlag ? 'var(--danger)' : (isDrop ? '#f59e0b' : 'var(--primary)')};">
+                  <div style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                      <span class="puppy-id-badge">#${logs.length - idx}</span>
+                      <span class="status-badge" style="background:${isPre ? 'var(--info-bg)' : 'var(--purple-bg)'}; color:${isPre ? 'var(--info-text)' : 'var(--purple-text)'}; border:1px solid ${isPre ? 'var(--info-border)' : 'var(--purple-border)'};">
+                        ${isPre ? '🤰 לפני המלטה' : '🍼 אחרי המלטה'} · ${shiftLabel}
+                      </span>
+                      <strong style="font-size:1.04rem;">${this.formatDateTimeIL(l.eventAt)}</strong>
+                      ${l.temperatureC ? `<span class="status-badge ${isDrop ? 'status-watch' : 'status-with_dam'}" style="font-size:0.88rem;">🌡️ חום: ${l.temperatureC}°C</span>` : ''}
+                      ${isDrop ? `<span class="status-badge status-watch">🔔 ירידת חום מתחת ל-37.8°C (סימן אפשרי להמלטה ב-12 עד 24 שעות!)</span>` : ''}
+                      ${l.weightKg ? `<span class="status-badge status-with_dam">⚖️ משקל: ${l.weightKg} ק"ג</span>` : ''}
+                      ${l.hasRedFlag ? `<span class="status-badge status-vet_care">🚨 דורש התייעצות עם הווטרינר/ית!</span>` : `<span class="status-badge status-with_dam">✓ תקין</span>`}
+                    </div>
+
+                    <div style="font-size:0.9rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:6px 14px;">
+                      ${isPre ? `
+                        <span><strong>סימנים מקדימים:</strong> ${l.preWhelpingSigns || 'רגילה — ללא סימנים מקדימים'}</span>
+                      ` : ''}
+                      <span><strong>תיאבון:</strong> ${l.appetite}</span>
+                      <span><strong>שתייה:</strong> ${l.drinking}</span>
+                      <span><strong>שתן וצואה:</strong> ${l.elimination}</span>
+                      <span><strong>מצב רוח/חיוניות:</strong> ${l.mood}</span>
+                      <span><strong>מצב העטינים:</strong> ${l.mammaryState}</span>
+                      ${!isPre ? `
+                        <span><strong>הפרשות (ריח):</strong> ${l.dischargeSmell}</span>
+                        <span><strong>מגמת הפרשות:</strong> ${l.dischargeTrend} ${l.dischargeColorQty ? `(${l.dischargeColorQty})` : ''}</span>
+                        <span><strong>הנקה ואימהות:</strong> ${l.maternalBehavior}</span>
+                      ` : ''}
+                    </div>
+                    ${l.medsGiven ? `<div style="margin-top:6px; font-size:0.86rem; color:var(--info-text);"><strong>💊 תרופות/תוספים שניתנו (לפי הוראת וטרינר):</strong> ${l.medsGiven}</div>` : ''}
+                    ${l.notes ? `<div style="margin-top:4px; font-size:0.88rem;"><strong>הערות:</strong> ${l.notes}</div>` : ''}
+                    ${l.recordedBy ? `<div style="margin-top:4px; font-size:0.78rem; color:var(--text-muted);">תועד ע"י: ${l.recordedBy}</div>` : ''}
                   </div>
-                  <div style="font-size:0.9rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:6px 14px;">
-                    <span><strong>תיאבון:</strong> ${l.appetite}</span>
-                    <span><strong>שתייה:</strong> ${l.drinking}</span>
-                    <span><strong>שתן וצואה:</strong> ${l.elimination}</span>
-                    <span><strong>מצב רוח/חיוניות:</strong> ${l.mood}</span>
-                    <span><strong>הפרשות (ריח):</strong> ${l.dischargeSmell}</span>
-                    <span><strong>מגמת הפרשות:</strong> ${l.dischargeTrend} ${l.dischargeColorQty ? `(${l.dischargeColorQty})` : ''}</span>
-                    <span><strong>מצב העטינים:</strong> ${l.mammaryState}</span>
-                    <span><strong>הנקה ואימהות:</strong> ${l.maternalBehavior}</span>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    ${l.photoDataUrl ? `<img src="${l.photoDataUrl}" style="width:52px; height:52px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="HeidiApp.openPhotoLightbox('${l.photoDataUrl}')" />` : ''}
+                    <button class="btn btn-sm btn-secondary" title="עריכת בדיקה זו" onclick="HeidiApp.openDamLogModal('${l.id}')">✏️</button>
+                    <button class="btn btn-sm btn-danger" title="מחיקה" onclick="HeidiApp.confirmDeleteDamLog('${l.id}')">🗑️</button>
                   </div>
-                  ${l.medsGiven ? `<div style="margin-top:6px; font-size:0.86rem; color:var(--info-text);"><strong>💊 תרופות/תוספים שניתנו (לפי הוראת וטרינר):</strong> ${l.medsGiven}</div>` : ''}
-                  ${l.notes ? `<div style="margin-top:4px; font-size:0.88rem;"><strong>הערות:</strong> ${l.notes}</div>` : ''}
                 </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                  ${l.photoDataUrl ? `<img src="${l.photoDataUrl}" style="width:52px; height:52px; object-fit:cover; border-radius:8px;" />` : ''}
-                  <button class="btn btn-sm btn-danger" onclick="HeidiApp.confirmDeleteDamLog('${l.id}')">🗑️</button>
-                </div>
-              </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
         `}
       </div>
     `;
   },
 
-  openDamLogModal() {
-    const dtVal = this.nowLocalInputValue();
+  toggleDamStageFields(stageVal) {
+    const preBox = document.getElementById('dlog_preWhelpingBox');
+    const postBox = document.getElementById('dlog_postWhelpingBox');
+    if (preBox) preBox.style.display = stageVal === 'pre_whelping' ? 'grid' : 'none';
+    if (postBox) postBox.style.display = stageVal === 'post_whelping' ? 'grid' : 'none';
+  },
+
+  openDamLogModal(editLogId = null) {
+    const store = window.HeidiStore;
+    const existing = editLogId ? (store.state.damDailyLogs || []).find(x => x.id === editLogId) : null;
+    const dtVal = existing && existing.eventAt ? existing.eventAt.slice(0, 16) : this.nowLocalInputValue();
+    const defaultStage = existing
+      ? (existing.stage || (store.state.puppies.length === 0 ? 'pre_whelping' : 'post_whelping'))
+      : (store.state.puppies.length === 0 ? 'pre_whelping' : 'post_whelping');
+
+    const curHour = new Date(dtVal).getHours();
+    const defaultShift = existing?.checkShift || (curHour >= 5 && curHour < 13 ? '☀️ בוקר' : (curHour >= 13 && curHour < 17 ? '🌤️ צהריים' : '🌙 ערב'));
+
     const modalBody = document.getElementById('appModalContent');
     modalBody.innerHTML = `
       <div class="card-header">
-        <h3 class="card-title">🦮 כרטיס מעקב יומי אחר היידי (סעיף 7 באפיון)</h3>
+        <h3 class="card-title">${existing ? '✏️ עריכת בדיקה של היידי' : '🦮 רישום בדיקה / מדידת חום להיידי'}</h3>
         <button class="btn btn-sm btn-secondary" onclick="HeidiApp.closeModal()">✖ סגירה</button>
       </div>
-      <form onsubmit="HeidiApp.submitDamLogForm(event)">
+      <form onsubmit="HeidiApp.submitDamLogForm(event, ${existing ? `'${existing.id}'` : 'null'})">
+        <div class="form-grid" style="margin-bottom: 10px; background: var(--surface-muted); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>שלב הבדיקה (לפני או אחרי ההמלטה)</label>
+            <select id="dlog_stage" class="form-control" onchange="HeidiApp.toggleDamStageFields(this.value)" style="font-weight:700; color:var(--primary-dark);">
+              <option value="pre_whelping" ${defaultStage === 'pre_whelping' ? 'selected' : ''}>🤰 לפני המלטה (מדידת חום בוקר/ערב וסימנים מקדימים)</option>
+              <option value="post_whelping" ${defaultStage === 'post_whelping' ? 'selected' : ''}>🍼 אחרי המלטה (התאוששות, לוכיה והנקה)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>מועד המדידה (בוקר / ערב)</label>
+            <select id="dlog_shift" class="form-control">
+              <option value="☀️ בוקר" ${defaultShift === '☀️ בוקר' ? 'selected' : ''}>☀️ בוקר</option>
+              <option value="🌙 ערב" ${defaultShift === '🌙 ערב' ? 'selected' : ''}>🌙 ערב</option>
+              <option value="🌤️ צהריים" ${defaultShift === '🌤️ צהריים' ? 'selected' : ''}>🌤️ צהריים</option>
+              <option value="🌌 לילה" ${defaultShift === '🌌 לילה' ? 'selected' : ''}>🌌 לילה</option>
+            </select>
+          </div>
+        </div>
+
         <div class="form-grid">
           <div class="form-group">
             <label>תאריך ושעה</label>
             <input type="datetime-local" id="dlog_eventAt" class="form-control" value="${dtVal}" required />
           </div>
           <div class="form-group">
-            <label>חום גוף ב-°C (רק אם נמדד נכון ובהנחיית וטרינר)</label>
-            <input type="number" step="0.1" id="dlog_temp" class="form-control" placeholder="למשל: 38.4 (אופציונלי)" />
+            <label>🌡️ חום גוף ב-°C (ירידה מתחת ל-37.8°C מסמנת התקרבות המלטה)</label>
+            <input type="number" step="0.1" id="dlog_temp" class="form-control" value="${existing?.temperatureC || ''}" placeholder="למשל: 38.1 או 37.5" />
           </div>
+        </div>
+
+        <!-- שדות ייעודיים ללפני המלטה -->
+        <div id="dlog_preWhelpingBox" class="form-grid" style="display: ${defaultStage === 'pre_whelping' ? 'grid' : 'none'}; background: var(--info-bg); padding: 12px; border-radius: 10px; border: 1px solid var(--info-border); margin-bottom: 12px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="color:var(--info-text);">🔍 סימנים מקדימים להמלטה אצל היידי</label>
+            <select id="dlog_preSigns" class="form-control">
+              ${[
+                'רגילה — ללא סימנים מקדימים',
+                'קינון / חפירה / חיפוש מקום שקט',
+                'חוסר שקט / התנשפות / רעידות',
+                'ירידה בתיאבון לקראת המלטה',
+                'התמלאות עטינים / טפטוף חלב',
+                'הפרשה רירית שקופה'
+              ].map(opt => `<option value="${opt}" ${(existing?.preWhelpingSigns || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="color:var(--info-text);">מי מדד/ה ותיעד/ה?</label>
+            <input type="text" id="dlog_recordedBy" class="form-control" value="${existing?.recordedBy || 'תכלת'}" placeholder="למשל: תכלת / בעלי / אמא / אבא" />
+          </div>
+        </div>
+
+        <div class="form-grid">
           <div class="form-group">
             <label>תיאבון</label>
             <select id="dlog_appetite" class="form-control">
-              <option value="תקין / אוכלת בתיאבון">תקין / אוכלת בתיאבון</option>
-              <option value="מוגבר">מוגבר</option>
-              <option value="ירוד מעט">ירוד מעט</option>
-              <option value="חוסר תיאבון משמעותי">חוסר תיאבון משמעותי (דורש וטרינר)</option>
+              ${[
+                'תקין / אוכלת בתיאבון',
+                'מוגבר',
+                'ירוד מעט (אופייני לפני המלטה)',
+                'חוסר תיאבון משמעותי'
+              ].map(opt => `<option value="${opt}" ${(existing?.appetite || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
             <label>שתייה</label>
             <select id="dlog_drinking" class="form-control">
-              <option value="תקינה">תקינה</option>
-              <option value="מרובה">מרובה</option>
-              <option value="מועטה / לא שותה">מועטה / לא שותה</option>
+              ${['תקינה', 'מרובה', 'מועטה / לא שותה'].map(opt => `<option value="${opt}" ${(existing?.drinking || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
             <label>מתן שתן וצואה</label>
             <select id="dlog_elim" class="form-control">
-              <option value="תקין">תקין</option>
-              <option value="צואה רכה / שלשול">צואה רכה / שלשול</option>
-              <option value="עצירות / קושי">עצירות / קושי</option>
-              <option value="לא נצפה">לא נצפה</option>
+              ${['תקין', 'צואה רכה / שלשול', 'עצירות / קושי', 'לא נצפה'].map(opt => `<option value="${opt}" ${(existing?.elimination || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
             <label>מצב רוח וחיוניות</label>
             <select id="dlog_mood" class="form-control">
-              <option value="ערנית ורגועה">ערנית ורגועה</option>
-              <option value="עייפה אחרי המלטה/הנקה">עייפה אחרי המלטה/הנקה</option>
-              <option value="חסרת מנוחה / מתנשפת">חסרת מנוחה / מתנשפת</option>
-              <option value="אפטית / חלשה מאוד">אפטית / חלשה מאוד (דורש וטרינר)</option>
+              ${[
+                'ערנית ורגועה',
+                'מחפשת קרבה / מתפנקת',
+                'חסרת מנוחה / מתנשפת / מקננת',
+                'עייפה אחרי המלטה/הנקה',
+                'אפטית / חלשה מאוד'
+              ].map(opt => `<option value="${opt}" ${(existing?.mood || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
-            <label>ריח הפרשות (לוכיה)</label>
+            <label>מצב העטינים</label>
+            <select id="dlog_mammary" class="form-control">
+              ${[
+                'רכים ותקינים',
+                'מתמלאים לקראת המלטה (תקין)',
+                'מלאים בחלב (ללא כאב או אודם)',
+                'אודם / חום / כאב / קושי'
+              ].map(opt => `<option value="${opt}" ${(existing?.mammaryState || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>משקל היידי בק"ג (אופציונלי)</label>
+            <input type="text" id="dlog_weight" class="form-control" value="${existing?.weightKg || ''}" placeholder="למשל: 33.0" />
+          </div>
+        </div>
+
+        <!-- שדות ייעודיים לאחרי המלטה בלבד (מוסתרים לפני ההמלטה!) -->
+        <div id="dlog_postWhelpingBox" class="form-grid" style="display: ${defaultStage === 'post_whelping' ? 'grid' : 'none'}; background: var(--surface-muted); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <div class="form-group">
+            <label>ריח הפרשות שלאחר לידה (לוכיה)</label>
             <select id="dlog_smell" class="form-control">
-              <option value="ללא ריח רע (תקין)">ללא ריח רע (תקין)</option>
-              <option value="ריח רע / חריג">ריח רע / חריג (דורש וטרינר!)</option>
+              <option value="ללא ריח רע (תקין)" ${(existing?.dischargeSmell || '') === 'ללא ריח רע (תקין)' ? 'selected' : ''}>ללא ריח רע (תקין)</option>
+              <option value="ריח רע / חריג" ${(existing?.dischargeSmell || '') === 'ריח רע / חריג' ? 'selected' : ''}>ריח רע / חריג (דורש וטרינר!)</option>
             </select>
           </div>
           <div class="form-group">
             <label>מגמת ההפרשות</label>
             <select id="dlog_trend" class="form-control">
-              <option value="במגמת ירידה / רגילה">במגמת ירידה / רגילה</option>
-              <option value="ללא הפרשות">ללא הפרשות</option>
-              <option value="מתגברת / דימום טרי">מתגברת / דימום טרי (דורש וטרינר!)</option>
+              <option value="במגמת ירידה / רגילה" ${(existing?.dischargeTrend || '') === 'במגמת ירידה / רגילה' ? 'selected' : ''}>במגמת ירידה / רגילה</option>
+              <option value="ללא הפרשות" ${(existing?.dischargeTrend || '') === 'ללא הפרשות' ? 'selected' : ''}>ללא הפרשות</option>
+              <option value="מתגברת / דימום טרי" ${(existing?.dischargeTrend || '') === 'מתגברת / דימום טרי' ? 'selected' : ''}>מתגברת / דימום טרי (דורש וטרינר!)</option>
             </select>
           </div>
           <div class="form-group">
             <label>צבע וכמות ההפרשה</label>
-            <input type="text" id="dlog_dischargeDesc" class="form-control" placeholder="למשל: אדומה-חומה כהה, כמות קטנה" />
-          </div>
-          <div class="form-group">
-            <label>מצב העטינים</label>
-            <select id="dlog_mammary" class="form-control">
-              <option value="רכים ותקינים">רכים ותקינים</option>
-              <option value="מלאים בחלב (ללא כאב או אודם)">מלאים בחלב (ללא כאב או אודם)</option>
-              <option value="אודם / חום / כאב / קושי">אודם / חום / כאב / קושי (דורש וטרינר!)</option>
-            </select>
+            <input type="text" id="dlog_dischargeDesc" class="form-control" value="${existing?.dischargeColorQty || ''}" placeholder="למשל: אדומה-חומה כהה, כמות קטנה" />
           </div>
           <div class="form-group">
             <label>הנקה והתנהגות אימהית</label>
             <select id="dlog_maternal" class="form-control">
-              <option value="מניקה ומטפלת היטב">מניקה ומטפלת היטב</option>
-              <option value="זקוקה לעידוד/השגחה בהנקה">זקוקה לעידוד/השגחה בהנקה</option>
-              <option value="התנהגות חריגה / דחייה">התנהגות חריגה / דחייה (דורש וטרינר!)</option>
+              <option value="מניקה ומטפלת היטב" ${(existing?.maternalBehavior || '') === 'מניקה ומטפלת היטב' ? 'selected' : ''}>מניקה ומטפלת היטב</option>
+              <option value="זקוקה לעידוד/השגחה בהנקה" ${(existing?.maternalBehavior || '') === 'זקוקה לעידוד/השגחה בהנקה' ? 'selected' : ''}>זקוקה לעידוד/השגחה בהנקה</option>
+              <option value="התנהגות חריגה / דחייה" ${(existing?.maternalBehavior || '') === 'התנהגות חריגה / דחייה' ? 'selected' : ''}>התנהגות חריגה / דחייה (דורש וטרינר!)</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label>משקל היידי בק"ג (אופציונלי)</label>
-            <input type="text" id="dlog_weight" class="form-control" placeholder="למשל: 33.0" />
           </div>
         </div>
 
         <div class="form-group">
           <label>💊 תרופות / תוספים שניתנו לפי הוראות הווטרינר/ית בלבד</label>
-          <input type="text" id="dlog_meds" class="form-control" placeholder="להזנה רק אם ניתנו בהוראת וטרינר" />
+          <input type="text" id="dlog_meds" class="form-control" value="${existing?.medsGiven || ''}" placeholder="להזנה רק אם ניתנו בהוראת וטרינר" />
         </div>
         <div class="form-group">
           <label>📷 תמונה (אופציונלי)</label>
           <input type="file" accept="image/*" class="form-control" onchange="HeidiApp.handleGenericPhotoUpload(this, 'dlog_photoDataUrl', 'dlog_photoPreview')" />
-          <input type="hidden" id="dlog_photoDataUrl" value="" />
-          <div id="dlog_photoPreview" style="margin-top:6px;"></div>
+          <input type="hidden" id="dlog_photoDataUrl" value="${existing?.photoDataUrl || ''}" />
+          <div id="dlog_photoPreview" style="margin-top:6px;">
+            ${existing?.photoDataUrl ? `<img src="${existing.photoDataUrl}" style="height:60px; border-radius:8px;" />` : ''}
+          </div>
         </div>
         <div class="form-group">
           <label>הערות חופשיות</label>
-          <textarea id="dlog_notes" class="form-control" rows="2" placeholder="הערות..."></textarea>
+          <textarea id="dlog_notes" class="form-control" rows="2" placeholder="הערות...">${existing?.notes || ''}</textarea>
         </div>
 
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
           <button type="button" class="btn btn-secondary" onclick="HeidiApp.closeModal()">ביטול</button>
-          <button type="submit" class="btn btn-primary">💾 שמירת מעקב יומי להיידי</button>
+          <button type="submit" class="btn btn-primary">💾 ${existing ? 'שמירת שינויים' : 'שמירת בדיקה להיידי'}</button>
         </div>
       </form>
     `;
     document.getElementById('appModalBackdrop').classList.add('open');
   },
 
-  submitDamLogForm(e) {
+  submitDamLogForm(e, editLogId = null) {
     e.preventDefault();
-    const entry = window.HeidiStore.addDamDailyLog({
+    const payload = {
+      stage: document.getElementById('dlog_stage').value,
+      checkShift: document.getElementById('dlog_shift').value,
+      preWhelpingSigns: document.getElementById('dlog_preSigns')?.value || 'רגילה — ללא סימנים מקדימים',
+      recordedBy: document.getElementById('dlog_recordedBy')?.value || 'משפחת היידי',
       eventAt: document.getElementById('dlog_eventAt').value,
       temperatureC: document.getElementById('dlog_temp').value,
       appetite: document.getElementById('dlog_appetite').value,
       drinking: document.getElementById('dlog_drinking').value,
       elimination: document.getElementById('dlog_elim').value,
       mood: document.getElementById('dlog_mood').value,
-      dischargeSmell: document.getElementById('dlog_smell').value,
-      dischargeTrend: document.getElementById('dlog_trend').value,
-      dischargeColorQty: document.getElementById('dlog_dischargeDesc').value,
+      dischargeSmell: document.getElementById('dlog_smell')?.value || '',
+      dischargeTrend: document.getElementById('dlog_trend')?.value || '',
+      dischargeColorQty: document.getElementById('dlog_dischargeDesc')?.value || '',
       mammaryState: document.getElementById('dlog_mammary').value,
-      maternalBehavior: document.getElementById('dlog_maternal').value,
+      maternalBehavior: document.getElementById('dlog_maternal')?.value || '',
       weightKg: document.getElementById('dlog_weight').value,
       medsGiven: document.getElementById('dlog_meds').value,
       photoDataUrl: document.getElementById('dlog_photoDataUrl').value,
       notes: document.getElementById('dlog_notes').value
-    });
+    };
+    const entry = editLogId
+      ? window.HeidiStore.updateDamDailyLog(editLogId, payload)
+      : window.HeidiStore.addDamDailyLog(payload);
     this.closeModal();
     this.switchTab(this.activeTab);
-    if (entry.hasRedFlag) {
-      alert('⚠️ שימי לב: אחד המדדים שהוזנו להיידי (כגון ריח חריג, מצב עטינים, אפתיה או חוסר תיאבון) מחייב התייעצות עם הווטרינר/ית!');
+    if (entry && entry.hasRedFlag) {
+      alert('⚠️ שימו לב: אחד המדדים שהוזנו להיידי מחייב התייעצות עם הווטרינר/ית!');
     }
   },
 
