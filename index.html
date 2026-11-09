@@ -28,12 +28,12 @@
         </div>
         <div>
           <div class="brand-title">היידי — מעקב המלטה וגדילת גורים</div>
-          <div class="brand-subtitle">מערכת תיעוד למשפחה של היידי · שמירה אוטומטית במכשיר</div>
+          <div class="brand-subtitle">מערכת תיעוד למשפחה של היידי · סנכרון חי בין כל המכשירים</div>
         </div>
       </div>
 
       <div class="top-actions">
-        <span id="saveStatusPill" class="save-pill">✓ כל הנתונים שמורים במכשיר</span>
+        <span id="saveStatusPill" class="save-pill" style="cursor:pointer;" title="לחצו לסנכרון מיידי בין כל מכשירי המשפחה" onclick="window.HeidiStore && window.HeidiStore.pullFromCloud(true)">☁️ מסונכרן לכל המשפחה</span>
         <button id="darkModeToggleBtn" class="btn btn-sm btn-secondary" onclick="HeidiApp.toggleDarkMode()">
           🌙 מצב לילה
         </button>
