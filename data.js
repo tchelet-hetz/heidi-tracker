@@ -826,34 +826,48 @@ class HeidiDataStore {
   }
 
   // ========================================================================
-  // שלב ג': 1. מעקב יומי אחר היידי — האם (DamDailyLog)
+  // שלב ג': 1. מעקב יומי אחר היידי — האם (לפני ההמלטה: חום בוקר/ערב + אחרי ההמלטה)
   // ========================================================================
   addDamDailyLog(data) {
     const nowIso = new Date().toISOString();
+    const stage = data.stage || (this.state.puppies.length === 0 ? 'pre_whelping' : 'post_whelping');
+    const isPre = stage === 'pre_whelping';
+    const tempVal = (data.temperatureC || '').trim();
+    const tempNum = tempVal !== '' && !isNaN(Number(tempVal)) ? Number(tempVal) : null;
+    const isTempDrop = Boolean(isPre && tempNum !== null && tempNum > 34 && tempNum < 37.8);
+
     const hasRedFlag = Boolean(
       data.appetite === 'חוסר תיאבון משמעותי' ||
       data.mood === 'אפטית / חלשה מאוד' ||
-      data.dischargeSmell === 'ריח רע / חריג' ||
-      data.dischargeTrend === 'מתגברת / דימום טרי' ||
-      data.mammaryState === 'אודם / חום / כאב / קושי' ||
-      data.maternalBehavior === 'התנהגות חריגה / דחייה'
+      (!isPre && (
+        data.dischargeSmell === 'ריח רע / חריג' ||
+        data.dischargeTrend === 'מתגברת / דימום טרי' ||
+        data.mammaryState === 'אודם / חום / כאב / קושי' ||
+        data.maternalBehavior === 'התנהגות חריגה / דחייה'
+      )) ||
+      (tempNum !== null && tempNum >= 39.5)
     );
 
     const entry = {
       id: 'dlog_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      stage,
+      checkShift: data.checkShift || '',
+      preWhelpingSigns: data.preWhelpingSigns || 'רגילה — ללא סימנים מקדימים',
+      isTempDrop,
       eventAt: data.eventAt || nowIso,
       weightKg: (data.weightKg || '').trim(),
-      appetite: data.appetite || 'תקין',
+      appetite: data.appetite || 'תקין / אוכלת בתיאבון',
       drinking: data.drinking || 'תקינה',
       elimination: data.elimination || 'תקין',
       mood: data.mood || 'ערנית ורגועה',
-      temperatureC: (data.temperatureC || '').trim(),
-      dischargeColorQty: (data.dischargeColorQty || '').trim(),
-      dischargeSmell: data.dischargeSmell || 'ללא ריח רע (תקין)',
-      dischargeTrend: data.dischargeTrend || 'במגמת ירידה / רגילה',
+      temperatureC: tempVal,
+      dischargeColorQty: isPre ? '' : (data.dischargeColorQty || '').trim(),
+      dischargeSmell: isPre ? '' : (data.dischargeSmell || 'ללא ריח רע (תקין)'),
+      dischargeTrend: isPre ? '' : (data.dischargeTrend || 'במגמת ירידה / רגילה'),
       mammaryState: data.mammaryState || 'רכים ותקינים',
-      maternalBehavior: data.maternalBehavior || 'מניקה ומטפלת היטב',
+      maternalBehavior: isPre ? '' : (data.maternalBehavior || 'מניקה ומטפלת היטב'),
       medsGiven: (data.medsGiven || '').trim(),
+      recordedBy: (data.recordedBy || 'משפחת היידי').trim(),
       notes: (data.notes || '').trim(),
       photoDataUrl: data.photoDataUrl || '',
       hasRedFlag,
@@ -867,6 +881,61 @@ class HeidiDataStore {
     }
     this.save();
     return entry;
+  }
+
+  updateDamDailyLog(logId, data) {
+    const idx = this.state.damDailyLogs.findIndex(x => x.id === logId);
+    if (idx === -1) return null;
+    const existing = this.state.damDailyLogs[idx];
+    const nowIso = new Date().toISOString();
+    const stage = data.stage || existing.stage || (this.state.puppies.length === 0 ? 'pre_whelping' : 'post_whelping');
+    const isPre = stage === 'pre_whelping';
+    const tempVal = (data.temperatureC ?? existing.temperatureC ?? '').trim();
+    const tempNum = tempVal !== '' && !isNaN(Number(tempVal)) ? Number(tempVal) : null;
+    const isTempDrop = Boolean(isPre && tempNum !== null && tempNum > 34 && tempNum < 37.8);
+
+    const hasRedFlag = Boolean(
+      data.appetite === 'חוסר תיאבון משמעותי' ||
+      data.mood === 'אפטית / חלשה מאוד' ||
+      (!isPre && (
+        data.dischargeSmell === 'ריח רע / חריג' ||
+        data.dischargeTrend === 'מתגברת / דימום טרי' ||
+        data.mammaryState === 'אודם / חום / כאב / קושי' ||
+        data.maternalBehavior === 'התנהגות חריגה / דחייה'
+      )) ||
+      (tempNum !== null && tempNum >= 39.5)
+    );
+
+    this.state.damDailyLogs[idx] = {
+      ...existing,
+      stage,
+      checkShift: data.checkShift ?? existing.checkShift ?? '',
+      preWhelpingSigns: data.preWhelpingSigns ?? existing.preWhelpingSigns ?? 'רגילה — ללא סימנים מקדימים',
+      isTempDrop,
+      eventAt: data.eventAt || existing.eventAt,
+      weightKg: (data.weightKg ?? existing.weightKg ?? '').trim(),
+      appetite: data.appetite || existing.appetite,
+      drinking: data.drinking || existing.drinking,
+      elimination: data.elimination || existing.elimination,
+      mood: data.mood || existing.mood,
+      temperatureC: tempVal,
+      dischargeColorQty: isPre ? '' : (data.dischargeColorQty ?? existing.dischargeColorQty ?? '').trim(),
+      dischargeSmell: isPre ? '' : (data.dischargeSmell || existing.dischargeSmell || 'ללא ריח רע (תקין)'),
+      dischargeTrend: isPre ? '' : (data.dischargeTrend || existing.dischargeTrend || 'במגמת ירידה / רגילה'),
+      mammaryState: data.mammaryState || existing.mammaryState || 'רכים ותקינים',
+      maternalBehavior: isPre ? '' : (data.maternalBehavior || existing.maternalBehavior || 'מניקה ומטפלת היטב'),
+      medsGiven: (data.medsGiven ?? existing.medsGiven ?? '').trim(),
+      recordedBy: (data.recordedBy ?? existing.recordedBy ?? 'משפחת היידי').trim(),
+      notes: (data.notes ?? existing.notes ?? '').trim(),
+      photoDataUrl: data.photoDataUrl !== undefined && data.photoDataUrl !== '' ? data.photoDataUrl : existing.photoDataUrl,
+      hasRedFlag,
+      updatedAt: nowIso
+    };
+    if (this.state.damDailyLogs[idx].weightKg) {
+      this.state.dam.currentWeightKg = this.state.damDailyLogs[idx].weightKg;
+    }
+    this.save();
+    return this.state.damDailyLogs[idx];
   }
 
   deleteDamDailyLog(logId) {
