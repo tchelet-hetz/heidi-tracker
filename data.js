@@ -463,12 +463,17 @@ class HeidiDataStore {
     const deletedSet = new Set([...localDel, ...remoteDel]);
     this.state.meta.deletedIds = Array.from(deletedSet);
 
-    // 2. פונקציית עזר למיזוג מערכים לפי id ו-updatedAt
+    // 2. פונקציית עזר למיזוג מערכים לפי id ו-updatedAt (ללא דריסת הזנות קיימות באף מכשיר!)
+    let localHasExtraOrNewer = false;
     const mergeArrayById = (localArr = [], remoteArr = []) => {
+      const remoteIds = new Set((remoteArr || []).map(x => x && x.id).filter(Boolean));
       const map = new Map();
       localArr.forEach(item => {
         if (item && item.id && !deletedSet.has(item.id)) {
           map.set(item.id, item);
+          if (!remoteIds.has(item.id)) {
+            localHasExtraOrNewer = true;
+          }
         }
       });
       remoteArr.forEach(rItem => {
@@ -481,6 +486,8 @@ class HeidiDataStore {
           const rTime = new Date(rItem.updatedAt || rItem.createdAt || 0).getTime() || 0;
           if (rTime >= lTime) {
             map.set(rItem.id, rItem);
+          } else {
+            localHasExtraOrNewer = true;
           }
         }
       });
@@ -528,6 +535,9 @@ class HeidiDataStore {
     }
 
     const afterJson = JSON.stringify(this.state);
+    if (localHasExtraOrNewer) {
+      this.scheduleCloudPush();
+    }
     if (afterJson !== beforeJson) {
       this.save(true);
       this.updateSaveIndicator(true, '', '☁️ התעדכן מהמשפחה');
