@@ -4,7 +4,7 @@
    ========================================================================== */
 
 const STORAGE_KEY = 'heidi_whelping_tracker_v1';
-const CLOUD_SYNC_TOPIC = 'heidi_family_sync_tchelet_2026_v3_clean';
+const CLOUD_SYNC_TOPIC = 'heidi_family_sync_tchelet_2026_v4_live';
 
 
 
@@ -88,6 +88,167 @@ function getDefaultMilestones(nowIso) {
   ];
 }
 
+function getDefaultDamLogs() {
+  return [
+    {
+      id: 'dlog_1794211850017_6puu',
+      stage: 'pre_whelping',
+      checkShift: '🌙 ערב',
+      preWhelpingSigns: 'רגילה — ללא סימנים מקדימים',
+      isTempDrop: false,
+      eventAt: '2026-11-08T19:45',
+      weightKg: '',
+      appetite: 'תקין / אוכלת בתיאבון',
+      drinking: 'תקינה',
+      elimination: 'תקין',
+      mood: 'ערנית ורגועה',
+      temperatureC: '37.9',
+      dischargeColorQty: '',
+      dischargeSmell: '',
+      dischargeTrend: '',
+      mammaryState: 'רכים ותקינים',
+      maternalBehavior: '',
+      medsGiven: '',
+      recordedBy: 'תכלת',
+      notes: 'בלילה לפני חפרה במיטה',
+      photoDataUrl: '',
+      hasRedFlag: false,
+      createdAt: '2026-11-09T08:10:50.017Z',
+      updatedAt: '2026-11-09T08:10:50.017Z'
+    },
+    {
+      id: 'dlog_1794211881149_9kyq',
+      stage: 'pre_whelping',
+      checkShift: '☀️ בוקר',
+      preWhelpingSigns: 'רגילה — ללא סימנים מקדימים',
+      isTempDrop: true,
+      eventAt: '2026-11-09T08:05',
+      weightKg: '',
+      appetite: 'תקין / אוכלת בתיאבון',
+      drinking: 'תקינה',
+      elimination: 'תקין',
+      mood: 'ערנית ורגועה',
+      temperatureC: '37.7',
+      dischargeColorQty: '',
+      dischargeSmell: '',
+      dischargeTrend: '',
+      mammaryState: 'רכים ותקינים',
+      maternalBehavior: '',
+      medsGiven: '',
+      recordedBy: 'תכלת',
+      notes: '',
+      photoDataUrl: '',
+      hasRedFlag: false,
+      createdAt: '2026-11-09T08:11:21.149Z',
+      updatedAt: '2026-11-09T08:11:21.149Z'
+    },
+    {
+      id: 'dlog_1794261163775_yv58',
+      stage: 'pre_whelping',
+      checkShift: '🌙 ערב',
+      preWhelpingSigns: 'חוסר שקט / התנשפות / רעידות',
+      isTempDrop: true,
+      eventAt: '2026-11-09T22:50',
+      weightKg: '',
+      appetite: 'תקין / אוכלת בתיאבון',
+      drinking: 'תקינה',
+      elimination: 'תקין',
+      mood: 'ערנית ורגועה',
+      temperatureC: '37.5',
+      dischargeColorQty: '',
+      dischargeSmell: '',
+      dischargeTrend: '',
+      mammaryState: 'רכים ותקינים',
+      maternalBehavior: '',
+      medsGiven: '',
+      recordedBy: 'תכלת',
+      notes: '',
+      photoDataUrl: '',
+      hasRedFlag: false,
+      createdAt: '2026-11-09T21:52:43.775Z',
+      updatedAt: '2026-11-09T21:52:43.775Z'
+    },
+    {
+      id: 'dlog_1794291713035_vzrx',
+      stage: 'pre_whelping',
+      checkShift: '☀️ בוקר',
+      preWhelpingSigns: 'רגילה — ללא סימנים מקדימים',
+      isTempDrop: false,
+      eventAt: '2026-11-10T08:05',
+      weightKg: '',
+      appetite: 'תקין / אוכלת בתיאבון',
+      drinking: 'תקינה',
+      elimination: 'תקין',
+      mood: 'ערנית ורגועה',
+      temperatureC: '37.8',
+      dischargeColorQty: '',
+      dischargeSmell: '',
+      dischargeTrend: '',
+      mammaryState: 'רכים ותקינים',
+      maternalBehavior: '',
+      medsGiven: '',
+      recordedBy: 'תכלת',
+      notes: '',
+      photoDataUrl: '',
+      hasRedFlag: false,
+      createdAt: '2026-11-10T06:21:53.035Z',
+      updatedAt: '2026-11-10T06:21:53.035Z'
+    },
+    {
+      id: 'dlog_1794338053474_54vn',
+      stage: 'pre_whelping',
+      checkShift: '🌙 ערב',
+      preWhelpingSigns: 'רגילה — ללא סימנים מקדימים',
+      isTempDrop: true,
+      eventAt: '2026-11-10T21:14',
+      weightKg: '',
+      appetite: 'תקין / אוכלת בתיאבון',
+      drinking: 'תקינה',
+      elimination: 'תקין',
+      mood: 'ערנית ורגועה',
+      temperatureC: '37.3',
+      dischargeColorQty: '',
+      dischargeSmell: '',
+      dischargeTrend: '',
+      mammaryState: 'רכים ותקינים',
+      maternalBehavior: '',
+      medsGiven: '',
+      recordedBy: 'תכלת',
+      notes: '',
+      photoDataUrl: '',
+      hasRedFlag: false,
+      createdAt: '2026-11-10T19:14:13.474Z',
+      updatedAt: '2026-11-10T19:14:13.474Z'
+    },
+    {
+      id: 'dlog_1794380100915_ltcv',
+      stage: 'pre_whelping',
+      checkShift: '☀️ בוקר',
+      preWhelpingSigns: 'רגילה — ללא סימנים מקדימים',
+      isTempDrop: true,
+      eventAt: '2026-11-11T08:50',
+      weightKg: '',
+      appetite: 'תקין / אוכלת בתיאבון',
+      drinking: 'תקינה',
+      elimination: 'תקין',
+      mood: 'ערנית ורגועה',
+      temperatureC: '37',
+      dischargeColorQty: '',
+      dischargeSmell: '',
+      dischargeTrend: '',
+      mammaryState: 'רכים ותקינים',
+      maternalBehavior: '',
+      medsGiven: '',
+      recordedBy: 'תכלת',
+      notes: '',
+      photoDataUrl: '',
+      hasRedFlag: false,
+      createdAt: '2026-11-11T06:55:00.915Z',
+      updatedAt: '2026-11-11T06:55:00.915Z'
+    }
+  ];
+}
+
 function createInitialState() {
   const nowIso = new Date().toISOString();
   return {
@@ -161,7 +322,7 @@ function createInitialState() {
     feedingEntries: [],
     healthObservations: [],
     laborEvents: [],
-    damDailyLogs: [],
+    damDailyLogs: getDefaultDamLogs(),
     tasks: getDefaultChecklistTasks(nowIso),
     milestones: getDefaultMilestones(nowIso),
     environmentLogs: [],
@@ -214,7 +375,20 @@ class HeidiDataStore {
             this.state.pregnancy[k] = initial.pregnancy[k];
           }
         });
-        this.save();
+
+        if (!Array.isArray(this.state.meta.deletedIds)) {
+          this.state.meta.deletedIds = [];
+        }
+        const delSet = new Set(this.state.meta.deletedIds);
+        if (!Array.isArray(this.state.damDailyLogs)) {
+          this.state.damDailyLogs = [];
+        }
+        const existingLogIds = new Set(this.state.damDailyLogs.map(l => l && l.id));
+        getDefaultDamLogs().forEach(defLog => {
+          if (!existingLogIds.has(defLog.id) && !delSet.has(defLog.id)) {
+            this.state.damDailyLogs.push(defLog);
+          }
+        });
 
         // אם רשימת המשימות הייתה הרשימה הקצרה משלב א' (5 פריטים), נשדרג לרשימת 20 פריטי הציוד המלאה
         if (!this.state.tasks || this.state.tasks.length < 10) {
@@ -230,9 +404,6 @@ class HeidiDataStore {
         }
         if (!this.state.journalNotes) {
           this.state.journalNotes = [];
-        }
-        if (!Array.isArray(this.state.meta.deletedIds)) {
-          this.state.meta.deletedIds = [];
         }
         this.save(true);
       } else {
@@ -343,11 +514,22 @@ class HeidiDataStore {
   }
 
   buildCompactStateForCloud() {
-    const stripPhoto = (arr = []) => arr.map(item => {
-      if (item && item.photoDataUrl && item.photoDataUrl.length > 1500) {
-        return { ...item, photoDataUrl: '__KEEP_LOCAL_PHOTO__' };
-      }
-      return item;
+    const stripPhotoAndEmpty = (arr = []) => arr.map(item => {
+      if (!item) return item;
+      const out = {};
+      Object.keys(item).forEach(k => {
+        const v = item[k];
+        if (v === '' || v === null || v === undefined) return;
+        if (k === 'photoDataUrl' && typeof v === 'string' && v.length > 500) {
+          out[k] = '__KEEP_LOCAL_PHOTO__';
+          return;
+        }
+        if (item.stage === 'pre_whelping' && (k === 'appetite' || k === 'drinking' || k === 'elimination' || k === 'mood' || k === 'mammaryState')) {
+          return;
+        }
+        out[k] = v;
+      });
+      return out;
     });
 
     const modifiedTasks = (this.state.tasks || []).filter(t =>
@@ -359,16 +541,13 @@ class HeidiDataStore {
 
     return {
       meta: this.state.meta,
-      dam: this.state.dam,
-      pregnancy: this.state.pregnancy,
       vetContact: this.state.vetContact,
-      litter: this.state.litter,
-      puppies: stripPhoto(this.state.puppies),
+      puppies: stripPhotoAndEmpty(this.state.puppies),
       weightEntries: this.state.weightEntries,
       feedingEntries: this.state.feedingEntries,
-      healthObservations: stripPhoto(this.state.healthObservations),
-      laborEvents: stripPhoto(this.state.laborEvents),
-      damDailyLogs: stripPhoto(this.state.damDailyLogs),
+      healthObservations: stripPhotoAndEmpty(this.state.healthObservations),
+      laborEvents: stripPhotoAndEmpty(this.state.laborEvents),
+      damDailyLogs: stripPhotoAndEmpty(this.state.damDailyLogs),
       environmentLogs: this.state.environmentLogs,
       journalNotes: this.state.journalNotes,
       tasks: modifiedTasks,
